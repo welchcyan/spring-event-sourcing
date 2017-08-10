@@ -1,10 +1,18 @@
 package demo.api.v1;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import demo.account.Account;
 import demo.address.AddressType;
 import demo.order.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.integration.support.MessageBuilder;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -12,22 +20,29 @@ import reactor.core.publisher.Flux;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
+@EnableBinding(TranSource.class)
 public class OrderServiceV1 {
+
+    private static Logger logger = LoggerFactory.getLogger(OrderServiceV1.class);
 
     private OrderRepository orderRepository;
     private OrderEventRepository orderEventRepository;
     private OAuth2RestTemplate oAuth2RestTemplate;
+    private MessageChannel output;
 
     @Autowired
     public OrderServiceV1(OrderRepository orderRepository,
                           OrderEventRepository orderEventRepository,
-                          @LoadBalanced OAuth2RestTemplate oAuth2RestTemplate) {
+                          @LoadBalanced OAuth2RestTemplate oAuth2RestTemplate,
+                          @Qualifier("account_balance") MessageChannel output) {
         this.orderRepository = orderRepository;
         this.orderEventRepository = orderEventRepository;
         this.oAuth2RestTemplate = oAuth2RestTemplate;
+        this.output = output;
     }
 
     public Order createOrder(List<LineItem> lineItems) {
@@ -49,6 +64,22 @@ public class OrderServiceV1 {
         newOrder.setLineItems(lineItems);
 
         newOrder = orderRepository.save(newOrder);
+
+        // Send to stream rabbit
+        Random r = new Random(System.currentTimeMillis());
+        Transaction tran = new Transaction(r.nextInt(8000000),"will", r.nextLong());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonStr = null;
+        try {
+            jsonStr = objectMapper.writeValueAsString(tran);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        logger.info("Transaction sent: " + jsonStr);
+
+        this.output.send(MessageBuilder.withPayload(jsonStr).build());
 
         return newOrder;
     }
