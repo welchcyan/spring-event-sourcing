@@ -13,12 +13,12 @@ public class Transaction implements Serializable {
 
     private long id;
     private String user_id;
-    private long val;
+    private double val;
 
     public Transaction() {
     }
 
-    public Transaction(long id, String user_id, long val) {
+    public Transaction(long id, String user_id, double val) {
         this.id = id;
         this.user_id = user_id;
         this.val = val;
@@ -40,11 +40,11 @@ public class Transaction implements Serializable {
         this.user_id = user_id;
     }
 
-    public long getVal() {
+    public double getVal() {
         return val;
     }
 
-    public void setVal(long val) {
+    public void setVal(double val) {
         this.val = val;
     }
 

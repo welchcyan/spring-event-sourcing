@@ -67,7 +67,8 @@ public class OrderServiceV1 {
 
         // Send to stream rabbit
         Random r = new Random(System.currentTimeMillis());
-        Transaction tran = new Transaction(r.nextInt(8000000),"will", r.nextLong());
+        Transaction tran = new Transaction(r.nextInt(8000000),defaultAccount.getAccountNumber(),
+                lineItems.stream().map(item-> (item.getQuantity()*item.getPrice()+item.getTax())).reduce( 0D, (x, y) -> x + y ));
 
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonStr = null;
