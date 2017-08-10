@@ -7,4 +7,4 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/cwei-pivotal/spring-cloud-event-sourcing-config.git
+          uri: https://github.com/welchcyan/spring-cloud-event-sourcing-config.git
