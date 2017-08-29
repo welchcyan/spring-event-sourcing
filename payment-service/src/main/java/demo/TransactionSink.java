@@ -24,7 +24,7 @@ import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.handler.annotation.Payload;
 
 /**
- * @author Dave Syer
+ * @author will chen
  *
  */
 @EnableBinding(TranSource.class)
